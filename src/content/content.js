@@ -197,15 +197,13 @@
     document.documentElement.dataset.ccNodeInspectorProbe = '1';
     try {
       const s = document.createElement('script');
-      s.textContent =
-        '(function(){try{' +
-        'function ok(){try{return typeof cc!=="undefined"&&cc&&cc.director;}catch(e){return false;}}' +
-        'function emit(){window.postMessage({source:"CC_NODE_INSPECTOR_PAGE",type:"CC_PROBE_OK"},"*");}' +
-        'if(ok()){emit();return;}' +
-        'var n=0,t=setInterval(function(){if(ok()){clearInterval(t);emit();}else if(++n>120)clearInterval(t);},250);' +
-        '}catch(e){}})();';
+      try {
+        s.src = chrome.runtime.getURL('src/injected/probe.js');
+      } catch (_) {
+        return;
+      }
+      s.onload = () => s.remove();
       (document.documentElement || document.head).appendChild(s);
-      s.remove();
     } catch (_) {}
   }
 

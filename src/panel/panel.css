@@ -392,11 +392,14 @@ input[type='number'] {
   align-items: center;
   justify-content: center;
   flex: 0 0 16px;
+  margin-right: 2px;
   color: var(--text-dim);
   font-size: 10px;
+  line-height: 1;
 }
 
 .tree-twist.empty {
+  /* 占位保持与有子节点行对齐，不可 display:none */
   visibility: hidden;
 }
 
@@ -405,10 +408,42 @@ input[type='number'] {
   text-overflow: ellipsis;
   color: var(--text);
   font-weight: var(--font-weight, 700);
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+/* 右侧固定区：徽标 / 组件数 / 显隐，全部右对齐 */
+.tree-tail {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex: 0 0 auto;
+  margin-left: 8px;
+}
+
+.tree-vis {
+  flex: 0 0 auto;
+  width: 16px;
+  text-align: center;
+  font-size: 11px;
+  line-height: 1;
+  cursor: pointer;
+  color: var(--text-dim);
+  opacity: 0.85;
+}
+
+.tree-vis:hover {
+  opacity: 1;
+  color: var(--accent);
+}
+
+/* 已隐藏节点：眼睛变暗，用删除线暗示 off 状态 */
+.tree-vis.off {
+  color: var(--text-inactive);
+  opacity: 0.5;
 }
 
 .tree-meta {
-  margin-left: 6px;
   color: var(--text-dim);
   font-size: 0.85em;
 }
@@ -417,7 +452,6 @@ input[type='number'] {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  margin-left: 4px;
   min-width: 12px;
   height: 12px;
   padding: 0 2px;

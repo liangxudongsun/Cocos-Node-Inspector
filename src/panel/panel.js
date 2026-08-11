@@ -433,6 +433,9 @@
       }
       send('HOVER_NODE', { uuid: uuid });
     },
+    onToggleActive: function (uuid, active) {
+      send('SET_NODE_PROP', { uuid: uuid, prop: 'active', value: active });
+    },
   });
 
   const inspectorView = new CCNodeInspectorView(inspectorRoot, {

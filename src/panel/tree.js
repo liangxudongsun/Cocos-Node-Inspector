@@ -225,7 +225,7 @@
     const rect = row.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
-    const padLeft = 4 + depth * 14;
+    const padLeft = 4 + depth * 18;
     // 鼠标相对行内容再向右偏移 → 视为「成为子节点」
     const childThreshold = padLeft + CHILD_INDENT_PX;
     if (x >= childThreshold) return 'inside';
@@ -255,7 +255,9 @@
     row.className = 'tree-row';
     if (node.uuid === this.selectedUuid) row.classList.add('selected');
     if (!node.active) row.classList.add('inactive');
-    row.style.paddingLeft = 4 + depth * 14 + 'px';
+    // 每层缩进须 ≥ 展开箭头列宽，否则有子节点的行箭头会顶到父节点名称列，看起来像同级
+    const TWIST_COL = 18;
+    row.style.paddingLeft = 4 + depth * TWIST_COL + 'px';
     row.dataset.uuid = node.uuid;
     row.dataset.parentUuid = parentUuid || '';
     row.dataset.siblingIndex = String(siblingIndex);
@@ -266,7 +268,8 @@
     const twist = document.createElement('span');
     twist.className = 'tree-twist' + (hasChildren ? '' : ' empty');
     const collapsed = this._isCollapsed(node.uuid);
-    twist.textContent = hasChildren ? (collapsed ? '▶' : '▼') : '•';
+    twist.textContent = hasChildren ? (collapsed ? '▶' : '▼') : '';
+    twist.setAttribute('aria-hidden', hasChildren ? 'false' : 'true');
     if (hasChildren) {
       twist.addEventListener('click', function (e) {
         e.stopPropagation();
@@ -284,27 +287,50 @@
     name.textContent = node.name || '(unnamed)';
     row.appendChild(name);
 
+    // 右侧固定区：徽标 / 组件数 / 显隐开关 —— 全部右对齐，与名字长度无关
+    const tail = document.createElement('span');
+    tail.className = 'tree-tail';
+
     if (node.hasLabel) {
       const badgeL = document.createElement('span');
       badgeL.className = 'tree-badge badge-l';
       badgeL.textContent = 'L';
       badgeL.title = 'cc.Label';
-      row.appendChild(badgeL);
+      tail.appendChild(badgeL);
     }
     if (node.hasSprite) {
       const badgeS = document.createElement('span');
       badgeS.className = 'tree-badge badge-s';
       badgeS.textContent = 'S';
       badgeS.title = 'cc.Sprite';
-      row.appendChild(badgeS);
+      tail.appendChild(badgeS);
     }
 
     if (node.componentCount) {
       const meta = document.createElement('span');
       meta.className = 'tree-meta';
       meta.textContent = '组件:' + node.componentCount;
-      row.appendChild(meta);
+      tail.appendChild(meta);
     }
+
+    // 显隐开关：场景根（depth 0）无 active 属性，不显示
+    if (depth > 0) {
+      const vis = document.createElement('span');
+      vis.className = 'tree-vis' + (node.active ? '' : ' off');
+      vis.textContent = '👁';
+      vis.title = node.active ? '点击隐藏节点' : '点击显示节点';
+      vis.addEventListener('click', function (e) {
+        e.stopPropagation();
+        e.preventDefault();
+        const next = !node.active;
+        node.active = next; // 乐观更新，避免关闭轮询时无反馈
+        self.render();
+        if (self.callbacks.onToggleActive) self.callbacks.onToggleActive(node.uuid, next);
+      });
+      tail.appendChild(vis);
+    }
+
+    row.appendChild(tail);
 
     row.addEventListener('click', function (e) {
       if (e.altKey) {
